@@ -2,11 +2,8 @@ package br.edu.scl.ifsp.sdm.contactlist.view
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.ContextMenu
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.AdapterView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -50,10 +47,11 @@ class MainActivity : AppCompatActivity(), OnContactClickListener {
                             val position =
                                 contactList.indexOfFirst { it.id == newOrEditedContact.id }
                             contactList[position] = newOrEditedContact
+                            contactAdapter.notifyItemChanged(position)
                         } else {
                             contactList.add(newOrEditedContact)
+                            contactAdapter.notifyItemInserted(contactList.lastIndex)
                         }
-                        contactAdapter.notifyDataSetChanged()
                     }
                 }
             }
@@ -82,38 +80,6 @@ class MainActivity : AppCompatActivity(), OnContactClickListener {
         }
     }
 
-    override fun onCreateContextMenu(
-        menu: ContextMenu?,
-        v: View?,
-        menuInfo: ContextMenu.ContextMenuInfo?
-    ) {
-        menuInflater.inflate(R.menu.context_menu_main, menu)
-    }
-
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        val position = (item.menuInfo as AdapterView.AdapterContextMenuInfo).position
-
-        return when (item.itemId) {
-            R.id.removeContactMi -> {
-                contactList.removeAt(position)
-                contactAdapter.notifyDataSetChanged()
-                Toast.makeText(this, getString(R.string.contact_removed), Toast.LENGTH_SHORT).show()
-                true
-            }
-
-            R.id.editContactMi -> {
-                carl.launch(Intent(this, ContactActivity::class.java).apply {
-                    putExtra(EXTRA_CONTACT, contactList[position])
-                })
-                true
-            }
-
-            else -> {
-                false
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
     }
@@ -122,6 +88,18 @@ class MainActivity : AppCompatActivity(), OnContactClickListener {
         startActivity(Intent(this, ContactActivity::class.java).apply {
             putExtra(EXTRA_CONTACT, contactList[position])
             putExtra(EXTRA_VIEW_CONTACT, true)
+        })
+    }
+
+    override fun onRemoveContactMenuItemClick(position: Int) {
+        contactList.removeAt(position)
+        contactAdapter.notifyItemRemoved(position)
+        Toast.makeText(this, getString(R.string.contact_removed), Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onEditContactMenuItemClick(position: Int) {
+        carl.launch(Intent(this, ContactActivity::class.java).apply {
+            putExtra(EXTRA_CONTACT, contactList[position])
         })
     }
 
